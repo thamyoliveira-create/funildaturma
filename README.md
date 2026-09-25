@@ -7,9 +7,9 @@ Mini-CRM de vendas para o curso Técnico em Vendas, alinhado às pautas formativ
 ## Como usar em aula
 
 1. **Crie a sala.** Abra `https://funildaturma.vercel.app/?sala=CODIGO` com um código da turma (letras minúsculas, números e hífen, de 3 a 40 caracteres), por exemplo `?sala=2em-vendas`.
-2. **Defina a senha da professora primeiro.** No Painel, em "Modo professora", digite uma senha (mínimo 4 caracteres). A primeira senha usada numa sala vira a senha dela.
-3. **Renomeie os grupos** (só no modo professora).
-4. **Mande o link com o código da sala aos alunos.** Cada grupo escolhe seu nome no topo da página.
+2. **Entre como professora** com a senha de professora (a mesma para todas as salas). Os códigos dos grupos aparecem no Painel.
+3. **Renomeie os grupos**, se quiser.
+4. **Mande o link aos alunos e passe a cada grupo só o código dele.** O grupo escolhe o nome no topo, digita o código e vê só os próprios dados.
 5. **Teste inicial:** cada grupo responde a aba "Teste antes/depois" com a opção "Antes".
 6. **Sequência:** Leads (P2) → Qualificar (P6) → Roteiro (P3/P5) → Negociação (P4).
 7. **Teste final:** repetir o teste com a opção "Depois".
@@ -17,6 +17,6 @@ Mini-CRM de vendas para o curso Técnico em Vendas, alinhado às pautas formativ
 
 ## O que fica salvo
 
-Os dados ficam no Supabase, separados por código de sala: leads com a linha do tempo das etapas, notas BANT, melhor nota no simulador, teste antes/depois e nomes dos grupos. Só a professora (com a senha) pode remover leads e renomear grupos.
+Os dados ficam no Supabase, separados por código de sala: leads com a linha do tempo das etapas, notas BANT, melhor nota no simulador, teste antes/depois e nomes dos grupos. Cada grupo acessa só os próprios leads e notas; o ranking mostra apenas os pontos. Só a professora vê tudo, remove leads, renomeia grupos e troca códigos.
 
 Não cadastre dados pessoais (CPF, telefone pessoal). Use só informações públicas dos comércios.
