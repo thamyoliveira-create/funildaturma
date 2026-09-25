@@ -72,7 +72,7 @@ td select{padding:4px 6px;font-size:13px}
       <select id="grupo"></select></label>
     <label for="sala" id="salaBox" hidden>Código da sala
       <input id="sala" placeholder="ex.: 2em-vendas"></label>
-    <span class="status" id="modo">Conectando…</span>
+    <div class="row"><span class="status" id="modo">Conectando…</span><button class="btn ghost sm" id="sairAll" type="button" hidden>Sair</button></div>
   </div>
 </header>
 
@@ -85,18 +85,27 @@ td select{padding:4px 6px;font-size:13px}
   <button data-t="teste">Teste antes/depois</button>
 </nav>
 
+<section id="acesso" class="grid2" hidden>
+  <form class="panel form" id="fGrupo"><h2>Entrar com o grupo</h2>
+    <p class="hint">Escolha o grupo no topo da página e digite o código que a professora passou. Cada grupo vê só os próprios leads.</p>
+    <label for="cod">Código do grupo<input id="cod" autocomplete="off" maxlength="12" placeholder="Ex.: 3FA92C" style="text-transform:uppercase"></label>
+    <div class="row"><button class="btn">Entrar</button><span class="status" id="gMsg"></span></div></form>
+  <form class="panel form" id="fProf"><h2>Sou a professora</h2>
+    <p class="hint">A primeira senha usada nesta sala vira a senha dela. Crie a sua antes de passar o link aos alunos.</p>
+    <label for="pin">Senha<input id="pin" type="password" autocomplete="off" placeholder="Mínimo 4 caracteres"></label>
+    <div class="row"><button class="btn">Entrar</button><span class="status" id="pMsg"></span></div></form>
+</section>
+
 <section id="painel" class="grid2">
+  <div class="panel" id="pCod" style="grid-column:1/-1" hidden><h2>Códigos dos grupos</h2>
+    <p class="hint">Passe a cada grupo só o código dele. Gerar um código novo desliga o antigo.</p>
+    <div class="grid2" id="codList" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px"></div></div>
   <div class="panel"><h2>Funil da sala</h2><div class="funnel" id="funil"></div>
     <p class="hint" id="exnote" hidden>Mostrando leads de exemplo. Eles somem quando o primeiro grupo cadastrar um lead real.</p></div>
   <div class="panel"><h2>Ranking dos grupos</h2><ol class="rank" id="rank"></ol>
     <p class="hint">Pontos: lead cadastrado 1, qualificado 2, abordado 3, negociação 4, fechado 6. Lead quente vale +1. Melhor nota no simulador soma direto.</p></div>
   <div class="panel"><h2>Antes e depois</h2><div id="evol"></div>
     <p class="hint">Nota do teste de 5 perguntas, feito pelo grupo no começo e no fim da sequência.</p></div>
-  <form class="panel form" id="fProf"><h2>Modo professora</h2>
-    <p class="hint" id="profHint">Com a senha você renomeia grupos e remove leads. A primeira senha digitada nesta sala vira a senha dela, então crie a sua antes de passar o link aos alunos.</p>
-    <div class="row" id="profIn"><input id="pin" type="password" autocomplete="off" placeholder="Senha (mín. 4 caracteres)" style="flex:1;min-width:160px"><button class="btn">Entrar</button></div>
-    <div class="row" id="profOut" hidden><span>Você está no modo professora.</span><button class="btn ghost sm" id="sair" type="button">Sair</button></div>
-    <span class="status" id="pMsg"></span></form>
   <form class="panel form" id="fNomes" style="grid-column:1/-1"><h2>Nomes dos grupos</h2>
     <div class="grid2" id="nomesIn" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px"></div>
     <div class="row"><button class="btn">Salvar nomes</button><span class="status" id="nMsg"></span></div></form>
@@ -173,7 +182,7 @@ const EX=[
  {id:"ex1",empresa:"Padaria Pão Dourado",nicho:"padaria",canal:"Instagram",perfil:"B2C",grupo:"Grupo 1",etapa:"Abordado",bant:10,dor:"sem cardápio online",ex:1},
  {id:"ex2",empresa:"Pet Amigo",nicho:"pet shop",canal:"Google Maps",perfil:"B2C",grupo:"Grupo 2",etapa:"Qualificado",bant:7,dor:"poucas avaliações",ex:1},
  {id:"ex3",empresa:"Distribuidora Ramos",nicho:"atacado",canal:"Facebook",perfil:"B2B",grupo:"Grupo 3",etapa:"Prospectado",bant:0,dor:"catálogo só em PDF",ex:1}];
-let leads=[],treinos={},nomes={},testes={},prof=false,pin="",db=null,real=false;
+let leads=[],treinos={},nomes={},testes={},placar={},codigos={},codigo="",aba="painel",prof=false,pin="",db=null,real=false;
 const nome=g=>(nomes[g]||"").trim()||g;
 let grupo=GRUPOS[0];try{grupo=localStorage.getItem("fg")||grupo}catch(e){}
 function grupoOpts(){$("#grupo").innerHTML=GRUPOS.map(g=>`<option value="${g}"${g===grupo?" selected":""}>${esc(nome(g))}</option>`).join("")}
@@ -184,24 +193,32 @@ const LS={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){re
 const SB_URL="https://uawlgmciisuowoitiqsx.supabase.co",SB_KEY="sb_publishable_NXAFIj326dZr1IW-VYOeDg_oY8SBJtK";
 let sb=null,sala=(new URLSearchParams(location.search).get("sala")||LS.get("fs","")||"turma").toLowerCase().replace(/[^a-z0-9-]/g,"").slice(0,40);if(sala.length<3)sala="turma";
 $("#sala").value=sala;
-$("#sala").onchange=e=>{const v=e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,"").slice(0,40);if(v.length<3){e.target.value=sala;return}sala=v;e.target.value=v;LS.set("fs",v);if(sb)carregarSB()};
+$("#sala").onchange=e=>{sair();const v=e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,"").slice(0,40);if(v.length<3){e.target.value=sala;return}sala=v;e.target.value=v;LS.set("fs",v);if(sb)carregarSB()};
 function local(){db=null;sb=null;leads=LS.get("fl",[]);treinos=LS.get("ft",{});nomes=LS.get("fn",{});testes=LS.get("fx",{});$("#modo").textContent="Salvando neste aparelho";$("#salaBox").hidden=true;render()}
 async function carregarSB(){
- const [a,b,c,t]=await Promise.all([sb.from("funil_leads").select("data").eq("sala",sala),sb.from("funil_treinos").select("grupo,nota").eq("sala",sala),sb.from("funil_salas").select("grupos").eq("sala",sala).maybeSingle(),sb.from("funil_testes").select("grupo,fase,nota").eq("sala",sala)]);
-
- if(a.error)return local();
- leads=a.data.map(r=>r.data);treinos={};(b.data||[]).forEach(r=>treinos[r.grupo]=r.nota);nomes=c.data?.grupos||{};testes={};(t.data||[]).forEach(r=>(testes[r.grupo]??={})[r.fase]=r.nota);$("#modo").textContent="Sala "+sala+" · salvando para a turma toda";render()}
+ const [c,p]=await Promise.all([sb.from("funil_salas").select("grupos").eq("sala",sala).maybeSingle(),sb.rpc("funil_placar",{p_sala:sala})]);
+ if(p.error)return local();
+ nomes=c.data?.grupos||{};placar=p.data||{};
+ if(codigo||prof){const d=await sb.rpc("funil_dados",{p_sala:sala,p_grupo:grupo,p_codigo:codigo,p_pin:prof?pin:""});
+  if(d.error||!d.data){sair();$("#gMsg").textContent="Código ou senha não conferem. Entre de novo.";}
+  else{leads=d.data.leads||[];treinos=d.data.treinos||{};testes=d.data.testes||{};codigos=d.data.codigos||{};}}
+ else{leads=[];treinos={};testes={};codigos={}}
+ $("#modo").textContent="Sala "+sala+(prof?" · professora":codigo?" · "+nome(grupo):"");render()}
+function sair(){codigo="";prof=false;pin="";leads=[];treinos={};testes={};codigos={};try{sessionStorage.removeItem("fa_"+sala)}catch(x){}$("#grupo").disabled=false;render()}
+function lembrar(){try{sessionStorage.setItem("fa_"+sala,JSON.stringify({grupo,codigo,pin,prof}))}catch(x){}}
 function iniciarSB(){if(!window.supabase)return local();
- sb=window.supabase.createClient(SB_URL,SB_KEY);$("#salaBox").hidden=false;carregarSB();
- sb.channel("funil").on("postgres_changes",{event:"*",schema:"public",table:"funil_leads"},()=>carregarSB()).on("postgres_changes",{event:"*",schema:"public",table:"funil_treinos"},()=>carregarSB()).on("postgres_changes",{event:"*",schema:"public",table:"funil_salas"},()=>carregarSB()).on("postgres_changes",{event:"*",schema:"public",table:"funil_testes"},()=>carregarSB()).subscribe();
- setInterval(()=>{if(sb&&!document.hidden)carregarSB()},20000)}
+ sb=window.supabase.createClient(SB_URL,SB_KEY);$("#salaBox").hidden=false;
+ try{const v=JSON.parse(sessionStorage.getItem("fa_"+sala)||"null");if(v){grupo=v.grupo;codigo=v.codigo||"";pin=v.pin||"";prof=!!v.prof;$("#grupo").disabled=!!codigo}}catch(x){}
+ carregarSB();setInterval(()=>{if(sb&&!document.hidden)carregarSB()},15000)}
 async function salvarLead(l){
  if(db){try{await db.doc("leads/"+l.id).set(l);return}catch(e){$("#modo").textContent="Sem permissão para salvar na turma, salvando neste aparelho";db=null;leads=LS.get("fl",[]).concat(leads.filter(x=>x.id===l.id));}}
- const i=leads.findIndex(x=>x.id===l.id);i<0?leads.push(l):leads[i]=l;render();
- if(sb){const r=await sb.from("funil_leads").upsert({id:l.id,sala,data:l,updated_at:new Date().toISOString()});if(!r.error)return;$("#modo").textContent="Falha ao salvar na sala, salvando neste aparelho"}
- LS.set("fl",leads)}
-async function apagarLead(id){if(db){try{await db.doc("leads/"+id).delete();return}catch(e){}}leads=leads.filter(x=>x.id!==id);render();if(sb){const r=await sb.rpc("funil_apagar_lead",{p_sala:sala,p_pin:pin,p_id:id});if(r.error||!r.data){$("#modo").textContent="Só a professora pode remover leads";carregarSB()}return}LS.set("fl",leads)}
-async function salvarTreino(g,n){if((treinos[g]||0)>=n)return;treinos[g]=n;if(db){try{await db.doc("treinos/"+g.replace(" ","_")).set({grupo:g,nota:n});return}catch(e){}}render();if(sb){await sb.from("funil_treinos").upsert({sala,grupo:g,nota:n});return}LS.set("ft",treinos)}
+ if(sb){if(prof){$("#modo").textContent="No modo professora você só visualiza. Quem cadastra é o grupo.";return carregarSB()}
+  const i=leads.findIndex(x=>x.id===l.id);i<0?leads.push(l):leads[i]=l;render();
+  const r=await sb.rpc("funil_salvar_lead",{p_sala:sala,p_grupo:grupo,p_codigo:codigo,p_data:l});if(r.error||!r.data)$("#modo").textContent="Não foi possível salvar. Confira o código do grupo.";return carregarSB()}
+ const i=leads.findIndex(x=>x.id===l.id);i<0?leads.push(l):leads[i]=l;render();LS.set("fl",leads)}
+async function apagarLead(id){if(db){try{await db.doc("leads/"+id).delete();return}catch(e){}}leads=leads.filter(x=>x.id!==id);render();if(sb){const r=await sb.rpc("funil_apagar_lead",{p_sala:sala,p_pin:pin,p_id:id});if(r.error||!r.data)$("#modo").textContent="Só a professora pode remover leads";return carregarSB()}LS.set("fl",leads)}
+async function salvarNota(tipo,fase,n){if(!sb)return true;const r=await sb.rpc("funil_salvar_nota",{p_sala:sala,p_grupo:grupo,p_codigo:codigo,p_tipo:tipo,p_fase:fase,p_nota:n});carregarSB();return !r.error&&r.data}
+async function salvarTreino(g,n){if((treinos[g]||0)>=n)return;treinos[g]=n;if(db){try{await db.doc("treinos/"+g.replace(" ","_")).set({grupo:g,nota:n});return}catch(e){}}render();if(sb)return salvarNota("simulador",null,n);LS.set("ft",treinos)}
 const mudaEtapa=(l,e)=>e===l.etapa?l:{...l,etapa:e,hist:[...(l.hist||[{e:l.etapa,t:l.criado||Date.now()}]),{e,t:Date.now()}]};
 const dt=t=>new Date(t).toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"});
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -220,11 +237,14 @@ const tag=n=>n>=9?'<span class="pill q">quente</span>':n>=5?'<span class="pill m
 setTimeout(()=>{if($("#modo").textContent==="Conectando…")local()},15000);
 
 // abas
-document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));["painel","leads","qualificar","roteiro","negociar","teste"].forEach(id=>$("#"+id).hidden=id!==b.dataset.t)});
+document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));aba=b.dataset.t;render()});
 
 function vis(){return leads.length?leads:EX}
 function render(){
- $("#fNomes").hidden=!pode();$("#fProf").hidden=!sb;$("#profIn").hidden=prof;$("#profOut").hidden=!prof;
+ const logado=!sb||!!codigo||prof;$("#acesso").hidden=logado;$("#tabs").hidden=!logado;$("#sairAll").hidden=!sb||!logado;
+ ["painel","leads","qualificar","roteiro","negociar","teste"].forEach(id=>$("#"+id).hidden=!logado||id!==aba);
+ $("#fNomes").hidden=!pode();$("#pCod").hidden=!(sb&&prof);
+ $("#codList").innerHTML=GRUPOS.map(g=>`<div class="panel" style="padding:10px 14px"><div class="lbl">${esc(nome(g))}</div><div class="row" style="justify-content:space-between"><span class="num" style="font-size:20px">${esc(codigos[g]||"–")}</span><button class="btn ghost sm" type="button" data-novo="${g}">Novo código</button></div></div>`).join("");
  $("#evol").innerHTML=GRUPOS.filter(g=>testes[g]).map(g=>{const a=testes[g].antes,d=testes[g].depois;return`<div class="stage"><span>${esc(nome(g))}</span><span class="num" style="text-align:left">${a??"–"} → ${d??"–"} /5</span><span class="num">${a!=null&&d!=null?(d-a>0?"+":"")+(d-a):""}</span></div>`}).join("")||'<p class="hint">Nenhum grupo fez o teste ainda.</p>';
  grupoOpts();if(document.activeElement?.closest?.("#fNomes")==null)$("#nomesIn").innerHTML=GRUPOS.map((g,i)=>`<label for="n${i}">${g}<input id="n${i}" maxlength="30" value="${esc(nomes[g]||"")}" placeholder="${g}"></label>`).join("");
  const L=vis(),isEx=!leads.length;$("#exnote").hidden=!isEx;
@@ -232,6 +252,7 @@ function render(){
  $("#funil").innerHTML=ETAPAS.map((e,i)=>`<div class="stage"><span>${e}</span><div class="bar"><i style="width:${cont[i]/mx*100}%"></i></div><span class="num">${cont[i]}</span></div>`).join("");
  const pts={};GRUPOS.forEach(g=>pts[g]=(treinos[g]||0));
  L.forEach(l=>{pts[l.grupo]=(pts[l.grupo]||0)+PTS[l.etapa]+(l.bant>=9?1:0)});
+ if(sb)GRUPOS.forEach(g=>pts[g]=+(placar[g]||0));
  $("#rank").innerHTML=Object.entries(pts).sort((a,b)=>b[1]-a[1]).map(([g,p])=>`<li><span>${esc(nome(g))}</span><span class="num">${p} pts</span></li>`).join("");
  const q=L.filter(l=>l.bant>0),med=q.length?(q.reduce((s,l)=>s+l.bant,0)/q.length).toFixed(1):"0",fech=cont[4],conv=L.length?Math.round(fech/L.length*100):0,ab=L.filter(l=>["Abordado","Negociação","Fechado"].includes(l.etapa)).length;
  const tr=Object.values(treinos),mt=tr.length?Math.round(tr.reduce((a,b)=>a+b,0)/tr.length):0;
@@ -251,10 +272,12 @@ $("#fNomes").onsubmit=async e=>{e.preventDefault();const n={};GRUPOS.forEach((g,
  let ok=true;if(db){try{await db.doc("config/grupos").set(n)}catch(x){ok=false}}else if(sb){const r=await sb.rpc("funil_salvar_nomes",{p_sala:sala,p_pin:pin,p_grupos:n});ok=!r.error&&r.data}else LS.set("fn",n);
  $("#nMsg").textContent=ok?"Nomes salvos":"Não foi possível salvar, tente de novo"};
 function pode(){return !sb||prof}
-$("#fProf").onsubmit=async e=>{e.preventDefault();const v=$("#pin").value;const r=await sb.rpc("funil_pin_ok",{p_sala:sala,p_pin:v});
- if(!r.error&&r.data){prof=true;pin=v;try{sessionStorage.setItem("fp_"+sala,v)}catch(x){}$("#pMsg").textContent="";$("#pin").value=""}else $("#pMsg").textContent="Senha incorreta.";render()};
-$("#sair").onclick=()=>{prof=false;pin="";try{sessionStorage.removeItem("fp_"+sala)}catch(x){}render()};
-try{const v=sessionStorage.getItem("fp_"+sala);if(v){pin=v;prof=true}}catch(x){}
+$("#fProf").onsubmit=async e=>{e.preventDefault();const v=$("#pin").value;const r=await sb.rpc("funil_entrar_prof",{p_sala:sala,p_pin:v});
+ if(!r.error&&r.data){prof=true;pin=v;codigo="";lembrar();$("#pMsg").textContent="";$("#pin").value="";const c=await sb.rpc("funil_gerar_codigos",{p_sala:sala,p_pin:pin,p_grupos:GRUPOS,p_refazer:null});codigos=c.data||{};carregarSB()}else $("#pMsg").textContent="Senha incorreta."};
+$("#fGrupo").onsubmit=async e=>{e.preventDefault();const v=$("#cod").value.trim().toUpperCase();const r=await sb.rpc("funil_grupo_ok",{p_sala:sala,p_grupo:grupo,p_codigo:v});
+ if(!r.error&&r.data){codigo=v;prof=false;pin="";lembrar();$("#grupo").disabled=true;$("#gMsg").textContent="";$("#cod").value="";carregarSB()}else $("#gMsg").textContent="Código não confere com o grupo escolhido."};
+$("#sairAll").onclick=()=>{sair();carregarSB()};
+$("#codList").onclick=async e=>{const g=e.target.dataset.novo;if(!g)return;const c=await sb.rpc("funil_gerar_codigos",{p_sala:sala,p_pin:pin,p_grupos:GRUPOS,p_refazer:g});if(c.data){codigos=c.data;render()}};
 // teste antes/depois
 const TQ=[["Um lead qualificado é aquele que…",["Segue a loja nas redes","Tem necessidade, orçamento, poder de decisão e prazo para comprar","Já comprou antes","Respondeu uma mensagem"],1],
 ["No BANT, o “N” avalia…",["O nome do cliente","A necessidade do cliente","O número de vendas","A negociação"],1],
@@ -264,7 +287,7 @@ const TQ=[["Um lead qualificado é aquele que…",["Segue a loja nas redes","Tem
 $("#tQs").innerHTML=TQ.map(([q,o],i)=>`<fieldset><legend>${i+1}. ${q}</legend><div class="opts" style="display:grid">${o.map((x,j)=>`<label><input type="radio" name="t${i}" id="t${i}_${j}" value="${j}" required> ${x}</label>`).join("")}</div></fieldset>`).join("");
 $("#fTeste").onsubmit=async e=>{e.preventDefault();const f=$("#fase").value;const n=TQ.reduce((s,q,i)=>s+(+document.querySelector(`input[name=t${i}]:checked`).value===q[2]?1:0),0);
  (testes[grupo]??={})[f]=n;render();let ok=true;
- if(sb)ok=!(await sb.from("funil_testes").upsert({sala,grupo,fase:f,nota:n,updated_at:new Date().toISOString()})).error;else LS.set("fx",testes);
+ if(sb)ok=await salvarNota("teste",f,n);else LS.set("fx",testes);
  $("#tMsg").textContent=ok?`${nome(grupo)} fez ${n} de 5 no teste ${f==="antes"?"inicial":"final"}.`:"Não foi possível salvar, tente de novo.";e.target.reset()};
 // BANT
 const BQ=[["B","Budget · Orçamento","O cliente tem dinheiro para investir?",["Não tem","Pouco","Tem, com cuidado","Tem e já investe"]],
