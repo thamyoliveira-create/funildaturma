@@ -187,7 +187,7 @@ $("#sala").value=sala;
 $("#sala").onchange=e=>{const v=e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,"").slice(0,40);if(v.length<3){e.target.value=sala;return}sala=v;e.target.value=v;LS.set("fs",v);if(sb)carregarSB()};
 function local(){db=null;sb=null;leads=LS.get("fl",[]);treinos=LS.get("ft",{});nomes=LS.get("fn",{});testes=LS.get("fx",{});$("#modo").textContent="Salvando neste aparelho";$("#salaBox").hidden=true;render()}
 async function carregarSB(){
- const [a,b,c,t]=await Promise.all([sb.from("funil_testes").select("grupo,fase,nota").eq("sala",sala),sb.from("funil_leads").select("data").eq("sala",sala),sb.from("funil_treinos").select("grupo,nota").eq("sala",sala),sb.from("funil_salas").select("grupos").eq("sala",sala).maybeSingle()]);
+ const [a,b,c,t]=await Promise.all([sb.from("funil_leads").select("data").eq("sala",sala),sb.from("funil_treinos").select("grupo,nota").eq("sala",sala),sb.from("funil_salas").select("grupos").eq("sala",sala).maybeSingle(),sb.from("funil_testes").select("grupo,fase,nota").eq("sala",sala)]);
 
  if(a.error)return local();
  leads=a.data.map(r=>r.data);treinos={};(b.data||[]).forEach(r=>treinos[r.grupo]=r.nota);nomes=c.data?.grupos||{};testes={};(t.data||[]).forEach(r=>(testes[r.grupo]??={})[r.fase]=r.nota);$("#modo").textContent="Sala "+sala+" · salvando para a turma toda";render()}
