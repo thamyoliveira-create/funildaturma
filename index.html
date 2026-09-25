@@ -1,0 +1,231 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
+<title>Funil da Turma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root{--bg:#f3f5f2;--card:#ffffff;--ink:#17232e;--muted:#5b6b72;--line:#d6dedb;--acc:#1f6f5c;--acc-ink:#fff;--soft:#e3efe9;
+--hot:#c2410c;--warm:#a16207;--cold:#1d5fa8;--hot-bg:#fde7dc;--warm-bg:#fbf0d2;--cold-bg:#dde9f7;
+--fd:"Bricolage Grotesque",Georgia,serif;--fb:"Public Sans",system-ui,sans-serif;--fm:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#111a1f;--card:#18242b;--ink:#e6eeea;--muted:#98a9a8;--line:#2b3b42;--acc:#4fb596;--acc-ink:#0d1a16;--soft:#1d3530;--hot:#ff8a5c;--warm:#e8b94a;--cold:#7fb3ee;--hot-bg:#3a2118;--warm-bg:#352c14;--cold-bg:#172b40}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#111a1f;--card:#18242b;--ink:#e6eeea;--muted:#98a9a8;--line:#2b3b42;--acc:#4fb596;--acc-ink:#0d1a16;--soft:#1d3530;--hot:#ff8a5c;--warm:#e8b94a;--cold:#7fb3ee;--hot-bg:#3a2118;--warm-bg:#352c14;--cold-bg:#172b40}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--fb);padding-inline:16px;padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:grid;gap:20px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:end;justify-content:space-between}
+h1{font:800 clamp(28px,5vw,40px)/1 var(--fd);margin:0;letter-spacing:-.02em}
+h2{font:600 20px/1.2 var(--fd);margin:0 0 12px;text-wrap:balance}
+.sub{color:var(--muted);margin:4px 0 0}
+.lbl{font:500 11px var(--fm);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+nav{display:flex;flex-wrap:wrap;gap:6px}
+nav button{font:600 14px var(--fb);border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px;border-radius:999px;cursor:pointer}
+nav button[aria-selected="true"]{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+label{display:grid;gap:4px;font-weight:600;font-size:14px}
+input,select,textarea{font:15px var(--fb);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+textarea{min-height:70px;resize:vertical}
+.form{display:grid;gap:12px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{font:600 14px var(--fb);background:var(--acc);color:var(--acc-ink);border:0;border-radius:8px;padding:10px 16px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--acc);border:1px solid var(--acc)}
+.btn.sm{padding:5px 10px;font-size:13px}
+.pill{font:500 12px var(--fm);padding:2px 8px;border-radius:999px;white-space:nowrap}
+.q{background:var(--hot-bg);color:var(--hot)}.m{background:var(--warm-bg);color:var(--warm)}.f{background:var(--cold-bg);color:var(--cold)}
+.funnel{display:grid;gap:6px}
+.stage{display:grid;grid-template-columns:120px 1fr 40px;gap:10px;align-items:center;font-size:14px}
+.bar{height:22px;background:var(--soft);border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;background:var(--acc)}
+.num{font:500 14px var(--fm);font-variant-numeric:tabular-nums;text-align:right}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:640px}
+th{text-align:left;font:500 11px var(--fm);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+td select{padding:4px 6px;font-size:13px}
+.ex{color:var(--muted);font-style:italic}
+.bant{display:grid;gap:14px}
+.bant fieldset{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0}
+.bant legend{font-weight:600;padding:0 4px}
+.opts{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px}.opts label{display:flex;gap:6px;font-weight:400;align-items:center}.opts input{width:auto}
+.score{font:800 44px/1 var(--fd)}
+.script{white-space:pre-wrap;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:14px;font-size:15px}
+.choice{display:block;width:100%;text-align:left;font:15px var(--fb);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:8px;cursor:pointer}
+.choice.ok{border-color:var(--acc);background:var(--soft)}.choice.bad{border-color:var(--hot);background:var(--hot-bg)}
+.fb{margin-top:10px;font-size:14px}
+.status{font:500 12px var(--fm);color:var(--muted)}
+.rank li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
+.rank{list-style:none;padding:0;margin:0}
+.hint{font-size:13px;color:var(--muted)}
+@media (max-width:520px){.stage{grid-template-columns:90px 1fr 32px}}
+@media (prefers-reduced-motion:no-preference){.bar i{transition:width .4s}}
+</style>
+
+<div class="wrap">
+<header>
+  <div>
+    <div class="lbl">Técnico em Vendas · Pautas 2 a 6</div>
+    <h1>Funil da Turma</h1>
+    <p class="sub">Prospecte, qualifique, aborde e negocie com comércios reais do bairro.</p>
+  </div>
+  <div class="form" style="min-width:min(240px,100%)">
+    <label for="grupo">Seu grupo
+      <select id="grupo"></select></label>
+    <span class="status" id="modo">Conectando…</span>
+  </div>
+</header>
+
+<nav role="tablist" id="tabs">
+  <button data-t="painel" aria-selected="true">Painel</button>
+  <button data-t="leads">1 · Leads</button>
+  <button data-t="qualificar">2 · Qualificar</button>
+  <button data-t="roteiro">3 · Roteiro</button>
+  <button data-t="negociar">4 · Negociação</button>
+</nav>
+
+<section id="painel" class="grid2">
+  <div class="panel"><h2>Funil da sala</h2><div class="funnel" id="funil"></div>
+    <p class="hint" id="exnote" hidden>Mostrando leads de exemplo. Eles somem quando o primeiro grupo cadastrar um lead real.</p></div>
+  <div class="panel"><h2>Ranking dos grupos</h2><ol class="rank" id="rank"></ol>
+    <p class="hint">Pontos: lead cadastrado 1, qualificado 2, abordado 3, negociação 4, fechado 6. Lead quente vale +1. Melhor nota no simulador soma direto.</p></div>
+  <div class="panel" style="grid-column:1/-1"><h2>Evidências para a socialização</h2>
+    <div class="row" id="kpis"></div>
+    <div class="row" style="margin-top:12px"><button class="btn ghost" id="copiar">Copiar resumo</button><span class="status" id="copiado"></span></div>
+    <textarea id="resumo" readonly style="margin-top:10px;min-height:120px"></textarea></div>
+</section>
+
+<section id="leads" hidden>
+  <div class="grid2">
+    <form class="panel form" id="fLead">
+      <h2>Novo lead (P2 · prospecção nas redes)</h2>
+      <label for="empresa">Empresa<input id="empresa" required placeholder="Ex.: Padaria Pão Dourado"></label>
+      <label for="nicho">Nicho<input id="nicho" required placeholder="Ex.: padaria, salão, pet shop"></label>
+      <div class="row">
+        <label for="canal" style="flex:1">Onde encontrou<select id="canal"><option>Instagram</option><option>WhatsApp Business</option><option>Facebook</option><option>Google Maps</option><option>TikTok</option><option>Indicação</option></select></label>
+        <label for="perfil" style="flex:1">Perfil<select id="perfil"><option>B2C</option><option>B2B</option></select></label>
+      </div>
+      <label for="dor">Dor observada<textarea id="dor" placeholder="Ex.: posta pouco, não responde comentários, sem cardápio online"></textarea></label>
+      <button class="btn">Cadastrar lead</button>
+    </form>
+    <div class="panel"><h2>Etapas do funil</h2>
+      <p>Prospectado → Qualificado → Abordado → Negociação → Fechado (ou Perdido).</p>
+      <p class="hint">Atualize a etapa na tabela abaixo sempre que o grupo avançar. Qualifique pela aba 2 para gerar a nota BANT.</p></div>
+  </div>
+  <div class="panel tbl" style="margin-top:20px"><table><thead><tr><th>Empresa</th><th>Grupo</th><th>Canal</th><th>BANT</th><th>Etapa</th><th></th></tr></thead><tbody id="tLeads"></tbody></table></div>
+</section>
+
+<section id="qualificar" hidden>
+  <form class="panel bant" id="fBant">
+    <h2>Qualificação BANT (P6 · formulários e questionários)</h2>
+    <label for="qLead">Lead<select id="qLead"></select></label>
+    <div id="bantQs"></div>
+    <div class="row" style="justify-content:space-between"><div><div class="lbl">Nota</div><span class="score" id="bScore">0</span><span class="num">/12</span> <span id="bTag"></span></div>
+    <button class="btn">Salvar qualificação</button></div>
+    <span class="status" id="bMsg"></span>
+  </form>
+</section>
+
+<section id="roteiro" hidden>
+  <div class="grid2">
+    <div class="panel form"><h2>Roteiro de abordagem (P3 e P5)</h2>
+      <label for="rLead">Lead<select id="rLead"></select></label>
+      <label for="rCanal">Canal da abordagem<select id="rCanal"><option>Direct do Instagram</option><option>WhatsApp</option><option>Visita presencial</option></select></label>
+      <label for="rOferta">O que o grupo oferece<input id="rOferta" value="um cardápio digital com link na bio"></label>
+      <button class="btn" id="gerar" type="button">Gerar roteiro</button>
+      <p class="hint">O roteiro segue abertura, dor, prazer, prova e chamada. Reescreva com as palavras do grupo antes de usar.</p></div>
+    <div class="panel"><h2>Roteiro</h2><div class="script" id="script">Escolha um lead e clique em Gerar roteiro.</div>
+      <div class="row" style="margin-top:12px"><button class="btn ghost" id="marcarAb" type="button">Marcar lead como abordado</button><span class="status" id="rMsg"></span></div></div>
+  </div>
+</section>
+
+<section id="negociar" hidden>
+  <div class="panel" id="sim"></div>
+</section>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const GRUPOS=["Grupo 1","Grupo 2","Grupo 3","Grupo 4","Grupo 5","Grupo 6"];
+const ETAPAS=["Prospectado","Qualificado","Abordado","Negociação","Fechado","Perdido"];
+const PTS={Prospectado:1,Qualificado:2,Abordado:3,"Negociação":4,Fechado:6,Perdido:1};
+const EX=[
+ {id:"ex1",empresa:"Padaria Pão Dourado",nicho:"padaria",canal:"Instagram",perfil:"B2C",grupo:"Grupo 1",etapa:"Abordado",bant:10,dor:"sem cardápio online",ex:1},
+ {id:"ex2",empresa:"Pet Amigo",nicho:"pet shop",canal:"Google Maps",perfil:"B2C",grupo:"Grupo 2",etapa:"Qualificado",bant:7,dor:"poucas avaliações",ex:1},
+ {id:"ex3",empresa:"Distribuidora Ramos",nicho:"atacado",canal:"Facebook",perfil:"B2B",grupo:"Grupo 3",etapa:"Prospectado",bant:0,dor:"catálogo só em PDF",ex:1}];
+let leads=[],treinos={},db=null,real=false;
+let grupo=GRUPOS[0];try{grupo=localStorage.getItem("fg")||grupo}catch(e){}
+$("#grupo").innerHTML=GRUPOS.map(g=>`<option${g===grupo?" selected":""}>${g}</option>`).join("");
+$("#grupo").onchange=e=>{grupo=e.target.value;try{localStorage.setItem("fg",grupo)}catch(e){}};
+
+// armazenamento: db compartilhado, senão este aparelho
+const LS={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+function local(){db=null;leads=LS.get("fl",[]);treinos=LS.get("ft",{});$("#modo").textContent="Salvando neste aparelho";render()}
+async function salvarLead(l){if(db){try{await db.doc("leads/"+l.id).set(l);return}catch(e){$("#modo").textContent="Sem permissão para salvar na turma, salvando neste aparelho";db=null;leads=LS.get("fl",[]).concat(leads.filter(x=>x.id===l.id));}}
+ const i=leads.findIndex(x=>x.id===l.id);i<0?leads.push(l):leads[i]=l;LS.set("fl",leads);render()}
+async function apagarLead(id){if(db){try{await db.doc("leads/"+id).delete();return}catch(e){}}leads=leads.filter(x=>x.id!==id);LS.set("fl",leads);render()}
+async function salvarTreino(g,n){if((treinos[g]||0)>=n)return;treinos[g]=n;if(db){try{await db.doc("treinos/"+g.replace(" ","_")).set({grupo:g,nota:n});return}catch(e){}}LS.set("ft",treinos);render()}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const tag=n=>n>=9?'<span class="pill q">quente</span>':n>=5?'<span class="pill m">morno</span>':n>0?'<span class="pill f">frio</span>':'<span class="pill f">sem nota</span>';
+
+(async()=>{try{
+ const d=window.claude?.use?await window.claude.use("db"):null;
+ if(!d)return local();
+ db=d;real=true;$("#modo").textContent="Salvando para a turma toda";
+ db.collection("leads").onSnapshot(s=>{if(!db)return;leads=s.docs.map(x=>x.data());render()},()=>local());
+ db.collection("treinos").onSnapshot(s=>{if(!db)return;treinos={};s.docs.forEach(x=>{const v=x.data();treinos[v.grupo]=v.nota});render()});
+}catch(e){local()}})();
+setTimeout(()=>{if($("#modo").textContent==="Conectando…")local()},11000);
+
+// abas
+document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));["painel","leads","qualificar","roteiro","negociar"].forEach(id=>$("#"+id).hidden=id!==b.dataset.t)});
+
+function vis(){return leads.length?leads:EX}
+function render(){
+ const L=vis(),isEx=!leads.length;$("#exnote").hidden=!isEx;
+ const cont=ETAPAS.map(e=>L.filter(l=>l.etapa===e).length),mx=Math.max(1,...cont);
+ $("#funil").innerHTML=ETAPAS.map((e,i)=>`<div class="stage"><span>${e}</span><div class="bar"><i style="width:${cont[i]/mx*100}%"></i></div><span class="num">${cont[i]}</span></div>`).join("");
+ const pts={};GRUPOS.forEach(g=>pts[g]=(treinos[g]||0));
+ L.forEach(l=>{pts[l.grupo]=(pts[l.grupo]||0)+PTS[l.etapa]+(l.bant>=9?1:0)});
+ $("#rank").innerHTML=Object.entries(pts).sort((a,b)=>b[1]-a[1]).map(([g,p])=>`<li><span>${esc(g)}</span><span class="num">${p} pts</span></li>`).join("");
+ const q=L.filter(l=>l.bant>0),med=q.length?(q.reduce((s,l)=>s+l.bant,0)/q.length).toFixed(1):"0",fech=cont[4],conv=L.length?Math.round(fech/L.length*100):0,ab=L.filter(l=>["Abordado","Negociação","Fechado"].includes(l.etapa)).length;
+ const tr=Object.values(treinos),mt=tr.length?Math.round(tr.reduce((a,b)=>a+b,0)/tr.length):0;
+ $("#kpis").innerHTML=[["Leads",L.length],["Qualificados",q.length],["Nota BANT média",med],["Abordados",ab],["Fechados",fech],["Conversão",conv+"%"],["Simulador (média)",mt+"/10"]].map(([k,v])=>`<div class="panel" style="padding:10px 14px"><div class="lbl">${k}</div><div class="num" style="text-align:left;font-size:20px">${v}</div></div>`).join("");
+ $("#resumo").value=`${isEx?"[EXEMPLO] ":""}Funil da Turma, Técnico em Vendas\nOs estudantes prospectaram ${L.length} comércios reais nas redes (P2), qualificaram ${q.length} com o questionário BANT (P6, nota média ${med}/12), abordaram ${ab} com roteiros de dor e prazer (P3 e P5) e fecharam ${fech} (conversão de ${conv}%). No simulador de objeções (P4) a média dos grupos foi ${mt}/10.\nGrupo líder: ${$("#rank li span")?.textContent||"-"}.`;
+ $("#tLeads").innerHTML=L.map(l=>`<tr${l.ex?' class="ex"':""}><td><strong>${esc(l.empresa)}</strong>${l.ex?" (exemplo)":""}<br><span class="hint">${esc(l.nicho)} · ${esc(l.perfil)} · ${esc(l.dor)}</span></td><td>${esc(l.grupo)}</td><td>${esc(l.canal)}</td><td>${tag(l.bant)} <span class="num">${l.bant||""}</span></td><td>${l.ex?esc(l.etapa):`<select id="et_${l.id}" data-id="${l.id}">${ETAPAS.map(e=>`<option${e===l.etapa?" selected":""}>${e}</option>`).join("")}</select>`}</td><td>${l.ex?"":`<button class="btn ghost sm" data-del="${l.id}" type="button">Remover</button>`}</td></tr>`).join("");
+ const opts=L.filter(l=>!l.ex).map(l=>`<option value="${l.id}">${esc(l.empresa)} (${esc(l.grupo)})</option>`).join("")||'<option value="">Cadastre um lead na aba 1</option>';
+ ["#qLead","#rLead"].forEach(s=>{const v=$(s).value;$(s).innerHTML=opts;if(v)$(s).value=v});
+}
+$("#tLeads").onchange=e=>{const l=leads.find(x=>x.id===e.target.dataset.id);if(l)salvarLead({...l,etapa:e.target.value})};
+$("#tLeads").onclick=e=>{const id=e.target.dataset.del;if(!id)return;if(e.target.dataset.sure){apagarLead(id)}else{e.target.dataset.sure=1;e.target.textContent="Confirmar"}};
+$("#fLead").onsubmit=e=>{e.preventDefault();salvarLead({id:uid(),empresa:$("#empresa").value.trim(),nicho:$("#nicho").value.trim(),canal:$("#canal").value,perfil:$("#perfil").value,dor:$("#dor").value.trim(),grupo,etapa:"Prospectado",bant:0,criado:Date.now()});e.target.reset()};
+
+// BANT
+const BQ=[["B","Budget · Orçamento","O cliente tem dinheiro para investir?",["Não tem","Pouco","Tem, com cuidado","Tem e já investe"]],
+["A","Authority · Autoridade","Quem conversou com vocês decide a compra?",["Não sei quem decide","Influencia","Decide junto","É o dono ou decisor"]],
+["N","Need · Necessidade","A dor que vocês viram é importante para ele?",["Não vê problema","Sabe, não liga","Reconhece a dor","Quer resolver já"]],
+["T","Timing · Prazo","Quando ele poderia comprar?",["Sem previsão","Em meses","Neste mês","Esta semana"]]];
+$("#bantQs").innerHTML=BQ.map(([k,t,p,o])=>`<fieldset><legend>${t}</legend><div class="hint">${p}</div><div class="opts">${o.map((x,i)=>`<label><input type="radio" name="b${k}" id="b${k}${i}" value="${i}"${i===0?" checked":""}> ${x}</label>`).join("")}</div></fieldset>`).join("");
+const bsum=()=>BQ.reduce((s,[k])=>s+ +document.querySelector(`input[name=b${k}]:checked`).value,0);
+$("#fBant").oninput=()=>{const n=bsum();$("#bScore").textContent=n;$("#bTag").innerHTML=tag(n||0.1)};$("#fBant").oninput();
+$("#fBant").onsubmit=e=>{e.preventDefault();const l=leads.find(x=>x.id===$("#qLead").value);if(!l){$("#bMsg").textContent="Cadastre um lead primeiro.";return}
+ salvarLead({...l,bant:bsum(),etapa:l.etapa==="Prospectado"?"Qualificado":l.etapa});$("#bMsg").textContent=`${l.empresa} qualificado com nota ${bsum()}.`};
+
+// roteiro
+$("#gerar").onclick=()=>{const l=leads.find(x=>x.id===$("#rLead").value)||EX[0],c=$("#rCanal").value,of=$("#rOferta").value||"nossa solução";
+ const oi=c==="Visita presencial"?"Bom dia! Tudo bem?":"Oi, tudo bem? Vi o perfil de vocês";
+ $("#script").textContent=`ABERTURA\n${oi} e gostei muito do trabalho da ${l.empresa}. Somos estudantes do curso Técnico em Vendas e estamos ajudando comércios do bairro.\n\nDOR (o que ele perde hoje)\nReparei que ${l.dor||"vocês ainda não aproveitam todo o potencial das redes"}. Muitos clientes de ${l.nicho} desistem quando não encontram a informação rápido, e acabam comprando no concorrente.\n\nPRAZER (como fica depois)\nCom ${of}, o cliente encontra tudo em segundos e chega pronto para comprar. Menos tempo respondendo perguntas repetidas, mais vendas no fim do mês.\n\nPROVA\nPodemos mostrar um exemplo feito para outro ${l.perfil==="B2B"?"fornecedor":"comércio"} em 2 minutos.\n\nCHAMADA\nPosso te mostrar ${c==="Visita presencial"?"agora no celular":"amanhã por aqui"}? Qual horário é melhor para você?`;$("#rMsg").textContent=""};
+$("#marcarAb").onclick=()=>{const l=leads.find(x=>x.id===$("#rLead").value);if(!l){$("#rMsg").textContent="Escolha um lead real.";return}if(["Prospectado","Qualificado"].includes(l.etapa))salvarLead({...l,etapa:"Abordado"});$("#rMsg").textContent="Etapa atualizada."};
+
+// simulador P4
+const OB=[["“Tá caro.”",[["Então faço pela metade do preço.",0,"Baixar o preço logo de cara ensina o cliente a sempre pedir desconto."],["Entendo. Caro comparado com o quê? Quanto você perde por mês sem isso?",2,"Boa: você investiga e compara o preço com o valor que ele perde."],["É o preço, não tem o que fazer.",0,"Encerra a conversa sem entender a objeção."]]],
+["“Vou pensar.”",[["Claro! Que parte você quer pensar melhor: preço, prazo ou resultado?",2,"Boa: transforma o 'vou pensar' numa dúvida concreta."],["Tudo bem, qualquer coisa me chama.",0,"Você perde o controle da negociação."],["Mas só vale hoje, se não fechar agora perde.",1,"Urgência falsa pode funcionar, mas quebra a confiança se não for verdade."]]],
+["“Já tenho alguém que faz isso.”",[["O nosso é muito melhor.",0,"Criticar o concorrente sem saber nada soa arrogante."],["Que bom! O que você mais gosta e o que mudaria no serviço atual?",2,"Boa: descobre brechas sem atacar ninguém."],["Então tá, desculpa incomodar.",0,"Desistiu cedo demais."]]],
+["“Não tenho tempo agora.”",[["Sem problema. Posso te mandar um resumo de 1 minuto e marcamos 10 minutos amanhã?",2,"Boa: respeita o tempo dele e já propõe o próximo passo."],["É rapidinho, só 30 minutos.",0,"30 minutos não é rapidinho para quem está ocupado."],["Quando você tiver tempo me procura.",0,"Sem próximo passo, o lead esfria."]]],
+["“Me dá um desconto?”",[["Dou 30%.",0,"Desconto sem troca reduz sua margem e o valor percebido."],["Consigo 10% se fecharmos o pacote de 3 meses.",2,"Boa: concede, mas pede algo em troca."],["Não damos desconto de jeito nenhum.",1,"Firme, mas pode travar a venda. Ofereça uma troca."]]]];
+let si=0,sp=0;
+function sim(){const el=$("#sim");if(si>=OB.length){const n=sp;el.innerHTML=`<h2>Resultado do ${esc(grupo)}</h2><div class="score">${n}/10</div><p>${n>=8?"Negociação de gente grande.":n>=5?"Bom caminho. Revise as respostas que travaram a venda.":"Treinem de novo, focando em perguntar antes de responder."}</p><button class="btn" id="rep" type="button">Treinar de novo</button>`;salvarTreino(grupo,n);$("#rep").onclick=()=>{si=0;sp=0;sim()};return}
+ const [o,cs]=OB[si];el.innerHTML=`<div class="lbl">Objeção ${si+1} de ${OB.length} · pontos ${sp}</div><h2>O cliente diz: ${o}</h2>${cs.map((c,i)=>`<button class="choice" data-i="${i}" type="button">${c[0]}</button>`).join("")}<div class="fb" id="fbk"></div>`;
+ el.querySelectorAll(".choice").forEach(b=>b.onclick=()=>{const c=cs[b.dataset.i];sp+=c[1];el.querySelectorAll(".choice").forEach(x=>x.disabled=true);b.classList.add(c[1]===2?"ok":"bad");$("#fbk").innerHTML=`${esc(c[2])}<div class="row" style="margin-top:10px"><button class="btn sm" id="nx" type="button">Próxima</button></div>`;$("#nx").onclick=()=>{si++;sim()}})}
+sim();render();
+$("#copiar").onclick=()=>{navigator.clipboard.writeText($("#resumo").value).then(()=>$("#copiado").textContent="Copiado",()=>{$("#resumo").select();$("#copiado").textContent="Texto selecionado, use Ctrl+C"})};
+</script>
+</body></html>
