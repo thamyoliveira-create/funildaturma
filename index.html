@@ -10,7 +10,7 @@
 :root[data-theme="dark"]{color-scheme:dark;--bg:#111a1f;--card:#18242b;--ink:#e6eeea;--muted:#98a9a8;--line:#2b3b42;--acc:#4fb596;--acc-ink:#0d1a16;--soft:#1d3530;--hot:#ff8a5c;--warm:#e8b94a;--cold:#7fb3ee;--hot-bg:#3a2118;--warm-bg:#352c14;--cold-bg:#172b40}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--fb);padding-inline:16px;padding-block:20px 48px}
-.wrap{max-width:1040px;margin:0 auto;display:grid;gap:20px}
+.wrap{max-width:1100px;margin:0 auto;display:grid;gap:20px}
 header{display:flex;flex-wrap:wrap;gap:12px;align-items:end;justify-content:space-between}
 h1{font:800 clamp(28px,5vw,40px)/1 var(--fd);margin:0;letter-spacing:-.02em}
 h2{font:600 20px/1.2 var(--fd);margin:0 0 12px;text-wrap:balance}
@@ -55,6 +55,11 @@ td select{padding:4px 6px;font-size:13px}
 .rank li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
 .rank{list-style:none;padding:0;margin:0}
 .hint{font-size:13px;color:var(--muted)}
+/* Kanban styles */
+.kanban-col{width:260px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;max-height:70vh;overflow-y:auto}
+.kanban-card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px;cursor:grab;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.kanban-card:active{cursor:grabbing}
+.kanban-card h4{margin:0 0 4px;font-size:14px;font-weight:700}
 @media (max-width:520px){.stage{grid-template-columns:90px 1fr 32px}}
 @media (prefers-reduced-motion:no-preference){.bar i{transition:width .4s}}
 </style>
@@ -76,9 +81,10 @@ td select{padding:4px 6px;font-size:13px}
 <nav role="tablist" id="tabs">
   <button data-t="painel" aria-selected="true">Painel</button>
   <button data-t="leads">1 · Leads</button>
-  <button data-t="qualificar">2 · Qualificar</button>
-  <button data-t="roteiro">3 · Roteiro</button>
-  <button data-t="negociar">4 · Negociação</button>
+  <button data-t="kanban">2 · Kanban</button>
+  <button data-t="qualificar">3 · Qualificar</button>
+  <button data-t="roteiro">4 · Roteiro</button>
+  <button data-t="negociar">5 · Negociação</button>
 </nav>
 
 <section id="painel" class="grid2">
@@ -107,9 +113,19 @@ td select{padding:4px 6px;font-size:13px}
     </form>
     <div class="panel"><h2>Etapas do funil</h2>
       <p>Prospectado → Qualificado → Abordado → Negociação → Fechado (ou Perdido).</p>
-      <p class="hint">Atualize a etapa na tabela abaixo sempre que o grupo avançar. Qualifique pela aba 2 para gerar a nota BANT.</p></div>
+      <p class="hint">Atualize a etapa na tabela ou no Kanban sempre que o grupo avançar. Qualifique pela aba de qualificação para gerar a nota BANT.</p></div>
   </div>
   <div class="panel tbl" style="margin-top:20px"><table><thead><tr><th>Empresa</th><th>Grupo</th><th>Canal</th><th>BANT</th><th>Etapa</th><th></th></tr></thead><tbody id="tLeads"></tbody></table></div>
+</section>
+
+<section id="kanban" hidden>
+  <div class="panel">
+    <h2>Kanban do Funil de Vendas</h2>
+    <p class="hint">Arraste os cards entre as colunas para atualizar a etapa do lead em tempo real.</p>
+    <div class="tbl" style="margin-top:16px">
+      <div style="display:flex;gap:12px;min-width:max-content" id="kanbanBoard"></div>
+    </div>
+  </div>
 </section>
 
 <section id="qualificar" hidden>
@@ -176,7 +192,7 @@ const tag=n=>n>=9?'<span class="pill q">quente</span>':n>=5?'<span class="pill m
 setTimeout(()=>{if($("#modo").textContent==="Conectando…")local()},11000);
 
 // abas
-document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));["painel","leads","qualificar","roteiro","negociar"].forEach(id=>$("#"+id).hidden=id!==b.dataset.t)});
+document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));["painel","leads","kanban","qualificar","roteiro","negociar"].forEach(id=>$("#"+id).hidden=id!==b.dataset.t)});
 
 function vis(){return leads.length?leads:EX}
 function render(){
@@ -191,12 +207,55 @@ function render(){
  $("#kpis").innerHTML=[["Leads",L.length],["Qualificados",q.length],["Nota BANT média",med],["Abordados",ab],["Fechados",fech],["Conversão",conv+"%"],["Simulador (média)",mt+"/10"]].map(([k,v])=>`<div class="panel" style="padding:10px 14px"><div class="lbl">${k}</div><div class="num" style="text-align:left;font-size:20px">${v}</div></div>`).join("");
  $("#resumo").value=`${isEx?"[EXEMPLO] ":""}Funil da Turma, Técnico em Vendas\nOs estudantes prospectaram ${L.length} comércios reais nas redes (P2), qualificaram ${q.length} com o questionário BANT (P6, nota média ${med}/12), abordaram ${ab} com roteiros de dor e prazer (P3 e P5) e fecharam ${fech} (conversão de ${conv}%). No simulador de objeções (P4) a média dos grupos foi ${mt}/10.\nGrupo líder: ${$("#rank li span")?.textContent||"-"}.`;
  $("#tLeads").innerHTML=L.map(l=>`<tr${l.ex?' class="ex"':""}><td><strong>${esc(l.empresa)}</strong>${l.ex?" (exemplo)":""}<br><span class="hint">${esc(l.nicho)} · ${esc(l.perfil)} · ${esc(l.dor)}</span></td><td>${esc(l.grupo)}</td><td>${esc(l.canal)}</td><td>${tag(l.bant)} <span class="num">${l.bant||""}</span></td><td>${l.ex?esc(l.etapa):`<select id="et_${l.id}" data-id="${l.id}">${ETAPAS.map(e=>`<option${e===l.etapa?" selected":""}>${e}</option>`).join("")}</select>`}</td><td>${l.ex?"":`<button class="btn ghost sm" data-del="${l.id}" type="button">Remover</button>`}</td></tr>`).join("");
+
+ // Render Kanban board
+ $("#kanbanBoard").innerHTML=ETAPAS.map(stage=>{
+   const stageLeads=L.filter(l=>l.etapa===stage);
+   return `<div class="kanban-col" data-stage="${stage}">
+     <div style="font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+       <span>${stage}</span>
+       <span class="pill">${stageLeads.length}</span>
+     </div>
+     <div style="display:flex;flex-direction:column;gap:8px;min-height:200px" class="kanban-dropzone" data-stage="${stage}">
+       ${stageLeads.map(l=>`<div class="kanban-card" draggable="${!l.ex}" data-id="${l.id}">
+         <h4>${esc(l.empresa)}</h4>
+         <div class="hint">${esc(l.nicho)} · <strong>${esc(l.grupo)}</strong></div>
+         <div class="row" style="margin-top:6px;justify-content:space-between;align-items:center">
+           ${tag(l.bant)}
+           ${l.ex?'<span class="hint">exemplo</span>':`<select onchange="window.moveLead('${l.id}',this.value)" style="font-size:11px;padding:2px 4px"><option value="">Mover...</option>${ETAPAS.map(e=>e!==stage?`<option value="${e}">${e}</option>`:'').join('')}</select>`}
+         </div>
+       </div>`).join('')}
+     </div>
+   </div>`;
+ }).join('');
+
  const opts=L.filter(l=>!l.ex).map(l=>`<option value="${l.id}">${esc(l.empresa)} (${esc(l.grupo)})</option>`).join("")||'<option value="">Cadastre um lead na aba 1</option>';
  ["#qLead","#rLead"].forEach(s=>{const v=$(s).value;$(s).innerHTML=opts;if(v)$(s).value=v});
 }
+
+window.moveLead=(id,newStage)=>{if(!newStage)return;const l=leads.find(x=>x.id===id);if(l)salvarLead({...l,etapa:newStage})};
+
 $("#tLeads").onchange=e=>{const l=leads.find(x=>x.id===e.target.dataset.id);if(l)salvarLead({...l,etapa:e.target.value})};
 $("#tLeads").onclick=e=>{const id=e.target.dataset.del;if(!id)return;if(e.target.dataset.sure){apagarLead(id)}else{e.target.dataset.sure=1;e.target.textContent="Confirmar"}};
 $("#fLead").onsubmit=e=>{e.preventDefault();salvarLead({id:uid(),empresa:$("#empresa").value.trim(),nicho:$("#nicho").value.trim(),canal:$("#canal").value,perfil:$("#perfil").value,dor:$("#dor").value.trim(),grupo,etapa:"Prospectado",bant:0,criado:Date.now()});e.target.reset()};
+
+// Drag and drop for Kanban
+let draggedId=null;
+document.addEventListener('dragstart', e=>{
+  const card=e.target.closest('.kanban-card');
+  if(card){draggedId=card.dataset.id;e.dataTransfer.setData('text/plain',draggedId)}
+});
+document.addEventListener('dragover', e=>{e.preventDefault()});
+document.addEventListener('drop', e=>{
+  e.preventDefault();
+  const zone=e.target.closest('.kanban-dropzone');
+  if(zone && draggedId){
+    const newStage=zone.dataset.stage;
+    const l=leads.find(x=>x.id===draggedId);
+    if(l && l.etapa!==newStage){salvarLead({...l,etapa:newStage})}
+    draggedId=null;
+  }
+});
 
 // BANT
 const BQ=[["B","Budget · Orçamento","O cliente tem dinheiro para investir?",["Não tem","Pouco","Tem, com cuidado","Tem e já investe"]],
